@@ -1,65 +1,160 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from 'react';
+import { Task } from '@/types';
+import { TaskTable } from '@/components/TaskTable';
+import { TaskModal } from '@/components/TaskModal';
+import { Plus, CheckCircle2, Clock } from 'lucide-react';
+
+export default function Dashboard() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  // タブの状態（進行中 or 完了）
+  const [activeTab, setActiveTab] = useState<'ongoing' | 'completed'>('ongoing');
+
+  // 初回レンダリング時にAPIからデータを読み込む
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await fetch('/api/tasks');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setTasks(data);
+        } else {
+          console.error('Invalid data format received from API');
+        }
+      } catch (error) {
+        console.error('Failed to fetch tasks', error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+
+
+  const handleSaveTask = async (taskToSave: Task) => {
+    // 画面上はすぐに反映する（楽観的UI更新）
+    if (editingTask) {
+      setTasks(tasks.map(t => t.id === taskToSave.id ? taskToSave : t));
+    } else {
+      setTasks([...tasks, taskToSave]);
+    }
+    
+    // 裏側でAPI（スプレッドシート）に保存
+    try {
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'save', task: taskToSave }),
+      });
+    } catch (error) {
+      console.error('Failed to save task to DB', error);
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    // 画面上はすぐに削除する
+    setTasks(tasks.filter(t => t.id !== id));
+    
+    // 裏側でAPI（スプレッドシート）に削除リクエスト
+    try {
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id }),
+      });
+    } catch (error) {
+      console.error('Failed to delete task from DB', error);
+    }
+  };
+
+  const handleOpenNewModal = () => {
+    setEditingTask(undefined);
+    setIsModalOpen(true);
+  };
+
+  // タブに応じたフィルタリング
+  const ongoingTasks = tasks.filter(t => t.status !== '完了');
+  const completedTasks = tasks.filter(t => t.status === '完了');
+
+  const displayedTasks = activeTab === 'ongoing' ? ongoingTasks : completedTasks;
+
+  if (!isLoaded) {
+    return <div className="min-h-screen bg-white" />; // ハイドレーションエラー防止
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-blue-100">
+      <main className="max-w-6xl mx-auto px-6 py-16">
+        
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+              進捗管理ダッシュボード
+            </h1>
+          </div>
+          
+          <button
+            onClick={handleOpenNewModal}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm active:scale-[0.98]"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <Plus size={18} />
+            新規追加
+          </button>
         </div>
+
+        {/* タブナビゲーション */}
+        <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-2">
+          <button
+            onClick={() => setActiveTab('ongoing')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 ${
+              activeTab === 'ongoing' 
+                ? 'border-gray-900 text-gray-900' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Clock size={16} />
+            進行中 ({ongoingTasks.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('completed')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 ${
+              activeTab === 'completed' 
+                ? 'border-green-600 text-green-600' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <CheckCircle2 size={16} />
+            完了案件 ({completedTasks.length})
+          </button>
+        </div>
+
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
+          <TaskTable 
+            tasks={displayedTasks} 
+            onEdit={handleEditTask} 
+            onDelete={handleDeleteTask} 
+          />
+        </div>
+
       </main>
+
+      <TaskModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveTask}
+        initialData={editingTask}
+      />
     </div>
   );
 }
