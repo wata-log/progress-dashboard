@@ -99,18 +99,18 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-blue-100">
-      <main className="max-w-6xl mx-auto px-6 py-16">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-16">
         
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 gap-4 md:gap-6">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900 text-center md:text-left">
               進捗管理ダッシュボード
             </h1>
           </div>
           
           <button
             onClick={handleOpenNewModal}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm active:scale-[0.98] w-full md:w-auto"
           >
             <Plus size={18} />
             新規追加
@@ -118,40 +118,40 @@ export default function Dashboard() {
         </div>
 
         {/* タブナビゲーション */}
-        <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-2 overflow-x-auto">
+        <div className="flex items-center gap-1 md:gap-2 mb-6 border-b border-gray-100 pb-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('ongoing')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'ongoing' 
                 ? 'border-blue-600 text-blue-600 bg-blue-50/50' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <Clock size={16} />
+            <Clock size={14} className="md:w-4 md:h-4" />
             進行中 ({ongoingTasks.length})
           </button>
           
           <button
             onClick={() => setActiveTab('payment_pending')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'payment_pending' 
                 ? 'border-orange-500 text-orange-600 bg-orange-50/50' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <div className={`w-2 h-2 rounded-full ${activeTab === 'payment_pending' ? 'bg-orange-500' : 'bg-gray-300'}`} />
+            <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${activeTab === 'payment_pending' ? 'bg-orange-500' : 'bg-gray-300'}`} />
             入金待ち ({paymentPendingTasks.length})
           </button>
 
           <button
             onClick={() => setActiveTab('completed')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
+            className={`flex items-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'completed' 
                 ? 'border-green-600 text-green-600 bg-green-50/50' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <CheckCircle2 size={16} />
+            <CheckCircle2 size={14} className="md:w-4 md:h-4" />
             完了案件 ({completedTasks.length})
           </button>
         </div>
