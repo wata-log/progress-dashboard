@@ -12,8 +12,8 @@ export default function Dashboard() {
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  // タブの状態（進行中 or 完了）
-  const [activeTab, setActiveTab] = useState<'ongoing' | 'completed'>('ongoing');
+  // タブの状態（進行中 | 入金待ち | 完了）
+  const [activeTab, setActiveTab] = useState<'ongoing' | 'payment_pending' | 'completed'>('ongoing');
 
   // 初回レンダリング時にAPIからデータを読み込む
   useEffect(() => {
@@ -84,10 +84,14 @@ export default function Dashboard() {
   };
 
   // タブに応じたフィルタリング
-  const ongoingTasks = tasks.filter(t => t.status !== '完了');
+  const ongoingTasks = tasks.filter(t => t.status !== '入金待ち' && t.status !== '完了');
+  const paymentPendingTasks = tasks.filter(t => t.status === '入金待ち');
   const completedTasks = tasks.filter(t => t.status === '完了');
 
-  const displayedTasks = activeTab === 'ongoing' ? ongoingTasks : completedTasks;
+  const displayedTasks = 
+    activeTab === 'ongoing' ? ongoingTasks : 
+    activeTab === 'payment_pending' ? paymentPendingTasks : 
+    completedTasks;
 
   if (!isLoaded) {
     return <div className="min-h-screen bg-white" />; // ハイドレーションエラー防止
@@ -114,23 +118,36 @@ export default function Dashboard() {
         </div>
 
         {/* タブナビゲーション */}
-        <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-2">
+        <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('ongoing')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'ongoing' 
-                ? 'border-gray-900 text-gray-900' 
+                ? 'border-blue-600 text-blue-600 bg-blue-50/50' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
             <Clock size={16} />
             進行中 ({ongoingTasks.length})
           </button>
+          
+          <button
+            onClick={() => setActiveTab('payment_pending')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
+              activeTab === 'payment_pending' 
+                ? 'border-orange-500 text-orange-600 bg-orange-50/50' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <div className={`w-2 h-2 rounded-full ${activeTab === 'payment_pending' ? 'bg-orange-500' : 'bg-gray-300'}`} />
+            入金待ち ({paymentPendingTasks.length})
+          </button>
+
           <button
             onClick={() => setActiveTab('completed')}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'completed' 
-                ? 'border-green-600 text-green-600' 
+                ? 'border-green-600 text-green-600 bg-green-50/50' 
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
