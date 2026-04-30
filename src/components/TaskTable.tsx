@@ -18,23 +18,24 @@ const getStatusBadgeColor = (status: TaskStatus) => {
   return 'bg-gray-50 text-gray-700 border-gray-200';
 };
 
+const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+
 const formatDate = (dateStr: string | undefined) => {
   if (!dateStr) return '-';
   try {
-    // YYYY-MM-DD 形式なら正規表現で直接変換（タイムゾーンズレなし）
+    let y: number, m: number, d: number;
     const isoMatch = dateStr.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
     if (isoMatch) {
-      return `${isoMatch[1]}/${isoMatch[2].padStart(2,'0')}/${isoMatch[3].padStart(2,'0')}`;
+      y = Number(isoMatch[1]); m = Number(isoMatch[2]); d = Number(isoMatch[3]);
+    } else {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '-';
+      const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      y = jst.getUTCFullYear(); m = jst.getUTCMonth() + 1; d = jst.getUTCDate();
     }
-    // "Fri Apr 17 2026 ..." などの形式はDateオブジェクト経由
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '-';
-    // UTCではなくJSTで表示するため+9時間
-    const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-    const y = jst.getUTCFullYear();
-    const m = String(jst.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(jst.getUTCDate()).padStart(2, '0');
-    return `${y}/${m}/${d}`;
+    const dateObj = new Date(y, m - 1, d);
+    const w = WEEKDAYS[dateObj.getDay()];
+    return `${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')} (${w})`;
   } catch {
     return '-';
   }
