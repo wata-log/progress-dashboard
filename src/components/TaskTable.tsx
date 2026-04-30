@@ -356,39 +356,36 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
     </div>
 
     {/* 削除確認ダイアログ */}
-    {deleteConfirmId && (() => {
-      const target = tasks.find(t => t.id === deleteConfirmId);
-      return (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-150">
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-                <Trash2 size={22} className="text-red-500" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">案件を削除しますか？</h3>
-                {target && (
-                  <p className="text-sm text-gray-500 mt-1">「{target.name}」を削除します。この操作は取り消せません。</p>
-                )}
-              </div>
+    {deleteConfirmId && (
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-150">
+          <div className="flex flex-col items-center text-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+              <Trash2 size={22} className="text-red-500" />
             </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleDeleteCancel}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm"
-              >
-                削除する
-              </button>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">案件を削除しますか？</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                「{tasks.find(t => t.id === deleteConfirmId)?.name}」を削除します。この操作は取り消せません。
+              </p>
             </div>
           </div>
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={handleDeleteCancel}
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm"
+            >
+              削除する
+            </button>
+          </div>
         </div>
-      );
-    })()}
+      </div>
+    )}
   );
 }
