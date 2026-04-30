@@ -185,7 +185,7 @@ export default function Dashboard() {
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
           {viewMode === 'calendar' ? (
-            <CalendarView tasks={tasks} />
+            <CalendarView tasks={ongoingTasks} />
           ) : (
             <TaskTable 
               tasks={displayedTasks} 
