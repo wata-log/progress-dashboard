@@ -20,11 +20,13 @@ export default function Dashboard() {
     const fetchTasks = async () => {
       try {
         const res = await fetch('/api/tasks');
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
+        console.log('Fetched tasks:', data);
         if (Array.isArray(data)) {
           setTasks(data);
         } else {
-          console.error('Invalid data format received from API');
+          console.error('Invalid data format received from API', data);
         }
       } catch (error) {
         console.error('Failed to fetch tasks', error);
