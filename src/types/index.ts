@@ -30,7 +30,7 @@ export interface Task {
   name: string;
   materialSharedDate: string; // YYYY-MM-DD
   status: TaskStatus;
-  price?: number;
+  price?: number; // 金額(税込)
   milestones: {
     firstDraft: Milestone;
     secondDraft: Milestone;
