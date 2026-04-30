@@ -79,18 +79,25 @@ export function TaskModal({ isOpen, onClose, onSave, initialData }: TaskModalPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 日付のみを抽出するヘルパー (ISO文字列から YYYY-MM-DD を取得)
+    const toDateOnly = (val: string) => {
+      if (!val) return '';
+      return val.split('T')[0];
+    };
+
     onSave({
       id: initialData?.id || crypto.randomUUID(),
       name,
-      materialSharedDate,
+      materialSharedDate: toDateOnly(materialSharedDate),
       status,
       price: price ? parseInt(price, 10) : undefined,
       milestones: {
-        firstDraft: { url: firstDraftUrl, deadline: firstDraftDeadline },
-        secondDraft: { url: secondDraftUrl, deadline: secondDraftDeadline },
-        thirdDraft: { url: thirdDraftUrl, deadline: thirdDraftDeadline },
-        fourthDraft: { url: fourthDraftUrl, deadline: fourthDraftDeadline },
-        publish: { url: publishUrl, deadline: publishDeadline },
+        firstDraft: { url: firstDraftUrl, deadline: toDateOnly(firstDraftDeadline) },
+        secondDraft: { url: secondDraftUrl, deadline: toDateOnly(secondDraftDeadline) },
+        thirdDraft: { url: thirdDraftUrl, deadline: toDateOnly(thirdDraftDeadline) },
+        fourthDraft: { url: fourthDraftUrl, deadline: toDateOnly(fourthDraftDeadline) },
+        publish: { url: publishUrl, deadline: toDateOnly(publishDeadline) },
       }
     });
     onClose();

@@ -36,25 +36,23 @@ const formatPrice = (price: number | undefined) => {
 const getDaysRemaining = (dateStr: string | undefined) => {
   if (!dateStr) return null;
   try {
-    // 日本時間での「今日」の開始時間を取得
+    // 文字列から確実に Date を作る (YYYY-MM-DD を想定)
+    const parts = dateStr.split(/[-/]/);
+    if (parts.length < 3) return null;
+    const deadlineDate = startOfDay(new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])));
+
+    // 日本時間の今日を取得
     const now = new Date();
-    const jstDateStr = new Intl.DateTimeFormat('ja-JP', {
-      timeZone: 'Asia/Tokyo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).format(now).replace(/\//g, '-');
+    const today = startOfDay(new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' })));
     
-    const today = startOfDay(new Date(jstDateStr));
-    const deadlineDate = startOfDay(new Date(dateStr));
-    
-    // 期限日 - 今日。当日なら 0 になる。
+    // 差分
     const diff = differenceInDays(deadlineDate, today);
     
-    // 当日なら 0 なので、 +1 して 「あと1日」とする。
-    // 期限が昨日(diff = -1)なら 0 になり、「期限切れ」へ。
+    // 4/30(今日) と 4/30(期限) なら diff=0。 0+1 = あと1日。
+    // 4/30(今日) と 4/29(昨日) なら diff=-1。 -1+1 = 0。 これが期限切れの境界。
     return diff + 1;
-  } catch {
+  } catch (e) {
+    console.error('Date Error:', e);
     return null;
   }
 };
