@@ -1,72 +1,70 @@
-import React from 'react';
 import { TaskStatus } from '@/types';
 
-interface StepProgressBarProps {
-  status: TaskStatus;
-}
-
-  // 達成済みのステップ（0〜5）を判定
+// 完了済みのステップ（塗りつぶす丸の数 0〜5）
 export const getCompletedSteps = (status: TaskStatus): number => {
   if (status === '完了') return 5;
   if (status === '入金待ち' || status === '公開準備中') return 4;
   
-  if (status.includes('4校UP済み') || status.includes('4校修正中')) return 4;
+  if (status.includes('4校UP済み')) return 4;
   if (status.includes('4校作業中')) return 3;
   
-  if (status.includes('3校UP済み') || status.includes('3校修正中')) return 3;
+  if (status.includes('3校UP済み')) return 3;
   if (status.includes('3校作業中')) return 2;
   
-  if (status.includes('2校UP済み') || status.includes('2校修正中')) return 2;
+  if (status.includes('2校UP済み')) return 2;
   if (status.includes('2校作業中')) return 1;
   
-  if (status.includes('初稿UP済み') || status.includes('初稿修正中')) return 1;
+  if (status.includes('初稿UP済み')) return 1;
   if (status.includes('初稿作業中')) return 0;
   
   return 0;
 };
 
-// 現在作業中の目標ステップ（1〜5）を判定
-export const getCurrentWorkingStep = (s: TaskStatus) => {
-  if (['未着手', '素材待ち', '初稿作業中', '初稿修正中'].includes(s)) return 1;
-  if (['初稿UP済み', '2校作業中', '2校修正中'].includes(s)) return 2;
-  if (['2校UP済み', '3校作業中', '3校修正中'].includes(s)) return 3;
-  if (['3校UP済み', '4校作業中', '4校修正中'].includes(s)) return 4;
-  if (['4校UP済み', '公開準備中', '入金待ち'].includes(s)) return 5;
-  if (s === '完了') return 5;
+// 現在取り組んでいるステップ（空の青丸にする番号 1〜5）
+export const getCurrentWorkingStep = (status: TaskStatus): number => {
+  if (status === '完了' || status === '入金待ち') return 0;
+  if (status === '公開準備中' || status.includes('4校UP済み')) return 5;
+  if (status.includes('4校作業中')) return 4;
+  if (status.includes('3校UP済み')) return 4;
+  if (status.includes('3校作業中')) return 3;
+  if (status.includes('2校UP済み')) return 3;
+  if (status.includes('2校作業中')) return 2;
+  if (status.includes('初稿UP済み')) return 2;
+  if (status.includes('初稿作業中')) return 1;
   return 1;
 };
 
-export function StepProgressBar({ status }: StepProgressBarProps) {
-  const completedSteps = getCompletedSteps(status);
-  const currentWorkingStep = getCurrentWorkingStep(status);
-  const totalSteps = 5;
+interface StepProgressBarProps {
+  status: TaskStatus;
+}
 
+export function StepProgressBar({ status }: StepProgressBarProps) {
+  const completed = getCompletedSteps(status);
+  const current = getCurrentWorkingStep(status);
+  
   return (
-    <div className="w-full flex items-center">
-      {Array.from({ length: totalSteps }).map((_, i) => {
-        const stepNum = i + 1;
-        const isCompleted = stepNum <= completedSteps;
-        const isCurrent = stepNum === currentWorkingStep && status !== '完了';
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((step) => {
+        const isCompleted = step <= completed;
+        const isCurrent = step === current;
         
         return (
-          <React.Fragment key={i}>
-            {/* 線 (最初の要素以外) */}
-            {i > 0 && (
-              <div className="flex-1 h-[2px] mx-1 relative overflow-hidden bg-gray-200">
-                 <div 
-                   className={`absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500 ease-out`}
-                   style={{ width: stepNum <= completedSteps ? '100%' : '0%' }}
-                 />
-              </div>
-            )}
-            
-            {/* 丸 */}
-            <div 
-              className={`w-3 h-3 rounded-full flex-shrink-0 transition-colors duration-500 ${
-                isCompleted ? 'bg-blue-500' : 'bg-gray-200'
-              } ${isCurrent ? 'ring-2 ring-blue-200 ring-offset-1' : ''}`}
+          <div key={step} className="flex items-center gap-1">
+            <div
+              className={`w-2.5 h-2.5 rounded-full border-2 transition-all duration-500
+                ${isCompleted ? 'bg-blue-500 border-blue-500' : 
+                  isCurrent ? 'bg-white border-blue-400 ring-2 ring-blue-100 ring-offset-0' : 
+                  'bg-gray-200 border-gray-200'}
+              `}
             />
-          </React.Fragment>
+            {step < 5 && (
+              <div 
+                className={`w-4 h-0.5 rounded-full transition-all duration-700
+                  ${isCompleted ? 'bg-blue-500' : 'bg-gray-100'}
+                `}
+              />
+            )}
+          </div>
         );
       })}
     </div>

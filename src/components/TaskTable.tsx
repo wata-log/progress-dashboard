@@ -13,7 +13,6 @@ interface TaskTableProps {
 const getStatusBadgeColor = (status: TaskStatus) => {
   if (status === '完了') return 'bg-green-50 text-green-700 border-green-200';
   if (status.includes('UP済み')) return 'bg-teal-50 text-teal-700 border-teal-200';
-  if (status.includes('修正中')) return 'bg-orange-50 text-orange-700 border-orange-200';
   if (status.includes('作業中') || status === '公開準備中') return 'bg-blue-50 text-blue-700 border-blue-200';
   if (status === '素材待ち' || status === '入金待ち') return 'bg-yellow-50 text-yellow-700 border-yellow-200';
   return 'bg-gray-50 text-gray-700 border-gray-200';
@@ -33,11 +32,13 @@ const formatPrice = (price: number | undefined) => {
   return new Intl.NumberFormat('ja-JP').format(price) + '円';
 };
 
+// 【修正】期限のカウントロジック：当日なら「あと1日」と表示
 const getDaysRemaining = (dateStr: string | undefined) => {
   if (!dateStr) return null;
   try {
     const deadlineDate = startOfDay(new Date(dateStr));
     const today = startOfDay(new Date());
+    // differenceInDays(4/30, 4/30) は 0。 +1 することで 当日なら「1」になる。
     const diff = differenceInDays(deadlineDate, today) + 1;
     return diff;
   } catch {
@@ -133,9 +134,9 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                         </div>
                         {daysRemaining !== null && task.status !== '入金待ち' && task.status !== '完了' && (
                           <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium w-fit
-                            ${daysRemaining < 0 ? 'bg-red-100 text-red-700' : daysRemaining <= 3 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600'}
+                            ${daysRemaining <= 0 ? 'bg-red-100 text-red-700' : daysRemaining <= 3 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600'}
                           `}>
-                            <Clock size={10} /> {daysRemaining < 0 ? `期限切れ` : `あと${daysRemaining}日`}
+                            <Clock size={10} /> {daysRemaining <= 0 ? `期限切れ` : `あと${daysRemaining}日`}
                           </span>
                         )}
                       </div>
@@ -166,8 +167,9 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                             {milestones.map((ms, i) => {
                               const stepNum = i + 1;
                               const completedCount = getCompletedSteps(task.status);
+                              const workingStep = getCurrentWorkingStep(task.status);
                               const isCompleted = stepNum <= completedCount;
-                              const isCurrent = stepNum === (completedCount + 1) && task.status !== '完了';
+                              const isCurrent = stepNum === workingStep;
                               const copyKey = `${task.id}-${ms.id}`;
                               return (
                                 <div key={i} className="flex flex-col items-center relative z-10 w-1/5">
@@ -236,8 +238,8 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                         {task.status}
                       </span>
                       {daysRemaining !== null && task.status !== '入金待ち' && task.status !== '完了' && (
-                        <span className={`text-[10px] font-bold ${daysRemaining < 0 ? 'text-red-600' : daysRemaining <= 3 ? 'text-orange-600' : 'text-blue-600'}`}>
-                          あと{daysRemaining}日
+                        <span className={`text-[10px] font-bold ${daysRemaining <= 0 ? 'text-red-600' : daysRemaining <= 3 ? 'text-orange-600' : 'text-blue-600'}`}>
+                          あと{daysRemaining <= 0 ? '0' : daysRemaining}日
                         </span>
                       )}
                     </div>
@@ -275,13 +277,16 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                    <div className="flex flex-col gap-6 relative">
                       <div className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-gray-200"></div>
                       {milestones.map((ms, i) => {
-                        const isCompleted = (i + 1) <= getCompletedSteps(task.status);
-                        const isCurrent = (i + 1) === getCurrentWorkingStep(task.status) && task.status !== '完了';
+                        const stepNum = i + 1;
+                        const completedCount = getCompletedSteps(task.status);
+                        const workingStep = getCurrentWorkingStep(task.status);
+                        const isCompleted = stepNum <= completedCount;
+                        const isCurrent = stepNum === workingStep;
                         const copyKey = `mobile-${task.id}-${ms.id}`;
                         return (
                           <div key={i} className="flex items-start gap-4 relative z-10">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-white shrink-0 ${isCompleted ? 'border-blue-500 text-blue-500' : isCurrent ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-300 text-gray-300'}`}>
-                              <div className={`w-2 h-2 rounded-full ${isCompleted ? 'bg-blue-500' : 'bg-transparent'}`}></div>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-white shrink-0 ${isCompleted ? 'border-blue-500 bg-blue-500 text-white' : isCurrent ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-300 text-gray-300'}`}>
+                              {isCompleted ? <Check size={14} strokeWidth={3} /> : <div className={`w-2 h-2 rounded-full ${isCurrent ? 'bg-blue-400' : 'bg-transparent'}`}></div>}
                             </div>
                             <div className="flex-1 min-w-0 pt-0.5">
                               <div className="flex justify-between items-center mb-1">
