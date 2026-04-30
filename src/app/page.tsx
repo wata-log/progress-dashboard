@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Task } from '@/types';
 import { TaskTable } from '@/components/TaskTable';
 import { TaskModal } from '@/components/TaskModal';
-import { Plus, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, CheckCircle2, Clock, LayoutList, CalendarDays } from 'lucide-react';
+import { CalendarView } from '@/components/CalendarView';
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -14,6 +15,7 @@ export default function Dashboard() {
   
   // タブの状態（進行中 | 入金待ち | 完了）
   const [activeTab, setActiveTab] = useState<'ongoing' | 'payment_pending' | 'completed'>('ongoing');
+  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
 
   // 初回レンダリング時にAPIからデータを読み込む
   useEffect(() => {
@@ -110,13 +112,36 @@ export default function Dashboard() {
             </h1>
           </div>
           
-          <button
-            onClick={handleOpenNewModal}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm active:scale-[0.98] w-full md:w-auto"
-          >
-            <Plus size={18} />
-            新規追加
-          </button>
+          <div className="flex items-center gap-2">
+            {/* ビュー切り替えボタン */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  viewMode === 'table' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <LayoutList size={14} />
+                リスト
+              </button>
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  viewMode === 'calendar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <CalendarDays size={14} />
+                カレンダー
+              </button>
+            </div>
+            <button
+              onClick={handleOpenNewModal}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm active:scale-[0.98]"
+            >
+              <Plus size={18} />
+              新規追加
+            </button>
+          </div>
         </div>
 
         {/* タブナビゲーション */}
@@ -159,11 +184,15 @@ export default function Dashboard() {
         </div>
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out fill-mode-both">
-          <TaskTable 
-            tasks={displayedTasks} 
-            onEdit={handleEditTask} 
-            onDelete={handleDeleteTask} 
-          />
+          {viewMode === 'calendar' ? (
+            <CalendarView tasks={tasks} />
+          ) : (
+            <TaskTable 
+              tasks={displayedTasks} 
+              onEdit={handleEditTask} 
+              onDelete={handleDeleteTask} 
+            />
+          )}
         </div>
 
       </main>
