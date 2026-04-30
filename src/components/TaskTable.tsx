@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Task, TaskStatus } from '@/types';
 import { StepProgressBar, getCompletedSteps, getCurrentWorkingStep } from './StepProgressBar';
-import { Edit2, Trash2, ChevronDown, ChevronUp, Link as LinkIcon, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import { Edit2, Trash2, ChevronDown, ChevronUp, Link as LinkIcon, Calendar, Clock, Copy, Check } from 'lucide-react';
 import { format, differenceInDays, startOfDay } from 'date-fns';
 
 interface TaskTableProps {
@@ -45,35 +45,19 @@ const getDaysRemaining = (dateStr: string | undefined) => {
   }
 };
 
-// 【重要】ステータスに応じて、現在目標とすべき期限を取得する関数
 const getCurrentDeadlineInfo = (task: Task) => {
   const { status, milestones } = task;
-  
-  if (status === '公開準備中' || status === '入金待ち' || status === '完了') {
-    return { date: milestones?.publish?.deadline, label: '公開' };
-  }
-
-  if (status.includes('4校UP済み') || status.includes('4校作業中')) {
-    return { date: milestones?.publish?.deadline, label: '公開' };
-  }
-
-  if (status.includes('3校UP済み') || status.includes('4校')) {
-    return { date: milestones?.fourthDraft?.deadline, label: '4校' };
-  }
-
-  if (status.includes('2校UP済み') || status.includes('3校')) {
-    return { date: milestones?.thirdDraft?.deadline, label: '3校' };
-  }
-
-  if (status.includes('初稿UP済み') || status.includes('2校')) {
-    return { date: milestones?.secondDraft?.deadline, label: '2校' };
-  }
-  
+  if (status === '公開準備中' || status === '入金待ち' || status === '完了') return { date: milestones?.publish?.deadline, label: '公開' };
+  if (status.includes('4校UP済み') || status.includes('4校作業中')) return { date: milestones?.publish?.deadline, label: '公開' };
+  if (status.includes('3校UP済み') || status.includes('4校')) return { date: milestones?.fourthDraft?.deadline, label: '4校' };
+  if (status.includes('2校UP済み') || status.includes('3校')) return { date: milestones?.thirdDraft?.deadline, label: '3校' };
+  if (status.includes('初稿UP済み') || status.includes('2校')) return { date: milestones?.secondDraft?.deadline, label: '2校' };
   return { date: milestones?.firstDraft?.deadline, label: '初稿' };
 };
 
 export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const toggleRow = (id: string) => {
     const newExpanded = new Set(expandedRows);
@@ -83,6 +67,12 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
       newExpanded.add(id);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const handleCopy = (url: string, id: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   if (tasks.length === 0) {
@@ -117,11 +107,11 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
               const daysRemaining = getDaysRemaining(currentDeadline.date);
               
               const milestones = [
-                { label: '初稿', url: task.milestones?.firstDraft?.url, deadline: task.milestones?.firstDraft?.deadline },
-                { label: '2校', url: task.milestones?.secondDraft?.url, deadline: task.milestones?.secondDraft?.deadline },
-                { label: '3校', url: task.milestones?.thirdDraft?.url, deadline: task.milestones?.thirdDraft?.deadline },
-                { label: '4校', url: task.milestones?.fourthDraft?.url, deadline: task.milestones?.fourthDraft?.deadline },
-                { label: '公開', url: task.milestones?.publish?.url, deadline: task.milestones?.publish?.deadline },
+                { id: 'first', label: '初稿', url: task.milestones?.firstDraft?.url, deadline: task.milestones?.firstDraft?.deadline },
+                { id: 'second', label: '2校', url: task.milestones?.secondDraft?.url, deadline: task.milestones?.secondDraft?.deadline },
+                { id: 'third', label: '3校', url: task.milestones?.thirdDraft?.url, deadline: task.milestones?.thirdDraft?.deadline },
+                { id: 'fourth', label: '4校', url: task.milestones?.fourthDraft?.url, deadline: task.milestones?.fourthDraft?.deadline },
+                { id: 'publish', label: '公開', url: task.milestones?.publish?.url, deadline: task.milestones?.publish?.deadline },
               ];
 
               return (
@@ -176,14 +166,31 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                             {milestones.map((ms, i) => {
                               const isCompleted = (i + 1) <= getCompletedSteps(task.status);
                               const isCurrent = (i + 1) === getCurrentWorkingStep(task.status) && task.status !== '完了';
+                              const copyKey = `${task.id}-${ms.id}`;
                               return (
                                 <div key={i} className="flex flex-col items-center relative z-10 w-1/5">
                                   <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 mb-3 bg-white transition-colors duration-500 ${isCompleted ? 'border-blue-500 text-blue-500' : isCurrent ? 'border-blue-400 ring-2 ring-blue-100 ring-offset-1' : 'border-gray-300 text-gray-300'}`}>
                                     <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${isCompleted ? 'bg-blue-500' : 'bg-transparent'}`}></div>
                                   </div>
                                   <span className="text-xs font-semibold text-gray-700 mb-1">{ms.label}</span>
-                                  <span className="text-[11px] text-gray-500 mb-2 font-mono">{formatDate(ms.deadline)}</span>
-                                  {ms.url && <a href={ms.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded transition-colors border border-blue-100"><LinkIcon size={10} />開く</a>}
+                                  <span className="text-[11px] text-gray-500 mb-3 font-mono">{formatDate(ms.deadline)}</span>
+                                  
+                                  {ms.url ? (
+                                    <div className="flex flex-col gap-1.5 w-full px-2">
+                                      <a href={ms.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-[10px] text-white bg-blue-600 hover:bg-blue-700 px-2 py-1.5 rounded shadow-sm transition-colors">
+                                        <LinkIcon size={10} />開く
+                                      </a>
+                                      <button 
+                                        onClick={() => handleCopy(ms.url!, copyKey)}
+                                        className={`flex items-center justify-center gap-1 text-[10px] px-2 py-1.5 rounded border transition-all ${copiedId === copyKey ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                                      >
+                                        {copiedId === copyKey ? <Check size={10} /> : <Copy size={10} />}
+                                        {copiedId === copyKey ? '完了' : 'コピー'}
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[10px] text-gray-300">URL未設定</span>
+                                  )}
                                 </div>
                               );
                             })}
@@ -206,11 +213,11 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
           const currentDeadline = getCurrentDeadlineInfo(task);
           const daysRemaining = getDaysRemaining(currentDeadline.date);
           const milestones = [
-            { label: '初稿', url: task.milestones?.firstDraft?.url, deadline: task.milestones?.firstDraft?.deadline },
-            { label: '2校', url: task.milestones?.secondDraft?.url, deadline: task.milestones?.secondDraft?.deadline },
-            { label: '3校', url: task.milestones?.thirdDraft?.url, deadline: task.milestones?.thirdDraft?.deadline },
-            { label: '4校', url: task.milestones?.fourthDraft?.url, deadline: task.milestones?.fourthDraft?.deadline },
-            { label: '公開', url: task.milestones?.publish?.url, deadline: task.milestones?.publish?.deadline },
+            { id: 'first', label: '初稿', url: task.milestones?.firstDraft?.url, deadline: task.milestones?.firstDraft?.deadline },
+            { id: 'second', label: '2校', url: task.milestones?.secondDraft?.url, deadline: task.milestones?.secondDraft?.deadline },
+            { id: 'third', label: '3校', url: task.milestones?.thirdDraft?.url, deadline: task.milestones?.thirdDraft?.deadline },
+            { id: 'fourth', label: '4校', url: task.milestones?.fourthDraft?.url, deadline: task.milestones?.fourthDraft?.deadline },
+            { id: 'publish', label: '公開', url: task.milestones?.publish?.url, deadline: task.milestones?.publish?.deadline },
           ];
 
           return (
@@ -265,6 +272,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                       {milestones.map((ms, i) => {
                         const isCompleted = (i + 1) <= getCompletedSteps(task.status);
                         const isCurrent = (i + 1) === getCurrentWorkingStep(task.status) && task.status !== '完了';
+                        const copyKey = `mobile-${task.id}-${ms.id}`;
                         return (
                           <div key={i} className="flex items-start gap-4 relative z-10">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-white shrink-0 ${isCompleted ? 'border-blue-500 text-blue-500' : isCurrent ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-300 text-gray-300'}`}>
@@ -275,7 +283,23 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                                 <span className={`text-sm font-bold ${isCompleted ? 'text-gray-900' : 'text-gray-500'}`}>{ms.label}</span>
                                 <span className="text-xs font-mono text-gray-400 bg-white px-1 py-0.5 rounded border border-gray-100">{formatDate(ms.deadline)}</span>
                               </div>
-                              {ms.url && <a href={ms.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100"><LinkIcon size={12} /> URLを開く</a>}
+                              {ms.url ? (
+                                <div className="flex gap-2">
+                                  <a href={ms.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-white bg-blue-600 px-3 py-1.5 rounded shadow-sm">
+                                    <LinkIcon size={12} />
+                                    開く
+                                  </a>
+                                  <button 
+                                    onClick={() => handleCopy(ms.url!, copyKey)}
+                                    className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded border transition-all ${copiedId === copyKey ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-gray-600 border-gray-200 active:bg-gray-100'}`}
+                                  >
+                                    {copiedId === copyKey ? <Check size={12} /> : <Copy size={12} />}
+                                    {copiedId === copyKey ? '完了' : 'コピー'}
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[11px] text-gray-300">URL未設定</span>
+                              )}
                             </div>
                           </div>
                         );
