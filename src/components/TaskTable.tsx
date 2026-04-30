@@ -36,11 +36,24 @@ const formatPrice = (price: number | undefined) => {
 const getDaysRemaining = (dateStr: string | undefined) => {
   if (!dateStr) return null;
   try {
+    // 日本時間での「今日」の開始時間を取得
+    const now = new Date();
+    const jstDateStr = new Intl.DateTimeFormat('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(now).replace(/\//g, '-');
+    
+    const today = startOfDay(new Date(jstDateStr));
     const deadlineDate = startOfDay(new Date(dateStr));
-    const today = startOfDay(new Date());
-    // differenceInDays(4/30, 4/30) は 0。 +1 することで 当日なら「1」になる。
-    const diff = differenceInDays(deadlineDate, today) + 1;
-    return diff;
+    
+    // 期限日 - 今日。当日なら 0 になる。
+    const diff = differenceInDays(deadlineDate, today);
+    
+    // 当日なら 0 なので、 +1 して 「あと1日」とする。
+    // 期限が昨日(diff = -1)なら 0 になり、「期限切れ」へ。
+    return diff + 1;
   } catch {
     return null;
   }
