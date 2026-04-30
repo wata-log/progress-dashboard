@@ -6,13 +6,22 @@ interface StepProgressBarProps {
 }
 
   // 達成済みのステップ（0〜5）を判定
-export const getCompletedSteps = (s: TaskStatus) => {
-  if (['未着手', '素材待ち', '初稿作業中', '初稿修正中'].includes(s)) return 0;
-  if (['初稿UP済み', '2校作業中', '2校修正中'].includes(s)) return 1;
-  if (['2校UP済み', '3校作業中', '3校修正中'].includes(s)) return 2;
-  if (['3校UP済み', '4校作業中', '4校修正中'].includes(s)) return 3;
-  if (['4校UP済み', '公開準備中', '入金待ち'].includes(s)) return 4;
-  if (s === '完了') return 5;
+export const getCompletedSteps = (status: TaskStatus): number => {
+  if (status === '完了') return 5;
+  if (status === '入金待ち' || status === '公開準備中') return 4;
+  
+  if (status.includes('4校UP済み') || status.includes('4校修正中')) return 4;
+  if (status.includes('4校作業中')) return 3;
+  
+  if (status.includes('3校UP済み') || status.includes('3校修正中')) return 3;
+  if (status.includes('3校作業中')) return 2;
+  
+  if (status.includes('2校UP済み') || status.includes('2校修正中')) return 2;
+  if (status.includes('2校作業中')) return 1;
+  
+  if (status.includes('初稿UP済み') || status.includes('初稿修正中')) return 1;
+  if (status.includes('初稿作業中')) return 0;
+  
   return 0;
 };
 

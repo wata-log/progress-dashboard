@@ -164,13 +164,18 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                             <div className="absolute top-3 left-[10%] right-[10%] h-[2px] bg-gray-200"></div>
                             <div className="absolute top-3 left-[10%] h-[2px] bg-blue-500 transition-all duration-500" style={{ width: `${(Math.min(getCompletedSteps(task.status), 4) / 4) * 80}%` }}></div>
                             {milestones.map((ms, i) => {
-                              const isCompleted = (i + 1) <= getCompletedSteps(task.status);
-                              const isCurrent = (i + 1) === getCurrentWorkingStep(task.status) && task.status !== '完了';
+                              const stepNum = i + 1;
+                              const completedCount = getCompletedSteps(task.status);
+                              const isCompleted = stepNum <= completedCount;
+                              const isCurrent = stepNum === (completedCount + 1) && task.status !== '完了';
                               const copyKey = `${task.id}-${ms.id}`;
                               return (
                                 <div key={i} className="flex flex-col items-center relative z-10 w-1/5">
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 mb-3 bg-white transition-colors duration-500 ${isCompleted ? 'border-blue-500 text-blue-500' : isCurrent ? 'border-blue-400 ring-2 ring-blue-100 ring-offset-1' : 'border-gray-300 text-gray-300'}`}>
-                                    <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${isCompleted ? 'bg-blue-500' : 'bg-transparent'}`}></div>
+                                  {/* 丸アイコン */}
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 mb-3 bg-white transition-colors duration-500 
+                                    ${isCompleted ? 'border-blue-500 bg-blue-500 text-white' : isCurrent ? 'border-blue-400 ring-2 ring-blue-100 ring-offset-1' : 'border-gray-300 text-gray-300'}
+                                  `}>
+                                    {isCompleted ? <Check size={14} strokeWidth={3} /> : <div className={`w-2 h-2 rounded-full ${isCurrent ? 'bg-blue-400' : 'bg-transparent'}`}></div>}
                                   </div>
                                   <span className="text-xs font-semibold text-gray-700 mb-1">{ms.label}</span>
                                   <span className="text-[11px] text-gray-500 mb-3 font-mono">{formatDate(ms.deadline)}</span>
