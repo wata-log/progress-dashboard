@@ -28,6 +28,11 @@ const formatDate = (dateStr: string | undefined) => {
   }
 };
 
+const formatPrice = (price: number | undefined) => {
+  if (price === undefined || price === null) return '-';
+  return new Intl.NumberFormat('ja-JP').format(price) + '円';
+};
+
 const getDaysRemaining = (dateStr: string | undefined) => {
   if (!dateStr) return null;
   try {
@@ -42,10 +47,11 @@ const getDaysRemaining = (dateStr: string | undefined) => {
 
 const getCurrentDeadlineInfo = (task: Task) => {
   const { status, milestones } = task;
-  if (status.includes('2校')) return { date: milestones?.secondDraft?.deadline, label: '2校' };
-  if (status.includes('3校')) return { date: milestones?.thirdDraft?.deadline, label: '3校' };
-  if (status.includes('4校')) return { date: milestones?.fourthDraft?.deadline, label: '4校' };
   if (status === '公開準備中' || status === '入金待ち' || status === '完了') return { date: milestones?.publish?.deadline, label: '公開' };
+  if (status.includes('4校UP済み') || status.includes('4校作業中')) return { date: milestones?.publish?.deadline, label: '公開' };
+  if (status.includes('3校UP済み') || status.includes('4校')) return { date: milestones?.fourthDraft?.deadline, label: '4校' };
+  if (status.includes('2校UP済み') || status.includes('3校')) return { date: milestones?.thirdDraft?.deadline, label: '3校' };
+  if (status.includes('初稿UP済み') || status.includes('2校')) return { date: milestones?.secondDraft?.deadline, label: '2校' };
   return { date: milestones?.firstDraft?.deadline, label: '初稿' };
 };
 
@@ -82,6 +88,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
               <th className="font-medium py-4 px-4 w-32">素材共有日</th>
               <th className="font-medium py-4 px-4 min-w-[150px]">次フェーズ期限</th>
               <th className="font-medium py-4 px-4 w-36">ステータス</th>
+              <th className="font-medium py-4 px-4 w-32">金額(税込)</th>
               <th className="font-medium py-4 px-4 min-w-[150px]">進捗</th>
               <th className="font-medium py-4 px-4 w-24 text-right">操作</th>
             </tr>
@@ -117,7 +124,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                           <span>{formatDate(currentDeadline.date)}</span>
                           {currentDeadline.date && <span className="text-[10px] text-gray-400 bg-gray-100 px-1 rounded">{currentDeadline.label}</span>}
                         </div>
-                        {daysRemaining !== null && (
+                        {daysRemaining !== null && task.status !== '入金待ち' && task.status !== '完了' && (
                           <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium w-fit
                             ${daysRemaining < 0 ? 'bg-red-100 text-red-700' : daysRemaining <= 3 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600'}
                           `}>
@@ -131,6 +138,9 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                         {task.status}
                       </span>
                     </td>
+                    <td className="py-4 px-4 text-gray-600 font-mono text-xs">
+                      {formatPrice(task.price)}
+                    </td>
                     <td className="py-4 px-4"><div className="w-full pr-4"><StepProgressBar status={task.status} /></div></td>
                     <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
@@ -141,7 +151,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                   </tr>
                   {isExpanded && (
                     <tr>
-                      <td colSpan={7} className="p-0">
+                      <td colSpan={8} className="p-0">
                         <div className="bg-gray-50/50 px-12 py-6 border-b border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
                           <div className="flex items-start justify-between relative mt-2">
                             <div className="absolute top-3 left-[10%] right-[10%] h-[2px] bg-gray-200"></div>
@@ -152,7 +162,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                               return (
                                 <div key={i} className="flex flex-col items-center relative z-10 w-1/5">
                                   <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 mb-3 bg-white transition-colors duration-500 ${isCompleted ? 'border-blue-500 text-blue-500' : isCurrent ? 'border-blue-400 ring-2 ring-blue-100 ring-offset-1' : 'border-gray-300 text-gray-300'}`}>
-                                    <div className={`w-2 h-2 rounded-full ${isCompleted ? 'bg-blue-500' : 'bg-transparent'}`}></div>
+                                    <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${isCompleted ? 'bg-blue-500' : 'bg-transparent'}`}></div>
                                   </div>
                                   <span className="text-xs font-semibold text-gray-700 mb-1">{ms.label}</span>
                                   <span className="text-[11px] text-gray-500 mb-2 font-mono">{formatDate(ms.deadline)}</span>
@@ -196,7 +206,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadgeColor(task.status)}`}>
                         {task.status}
                       </span>
-                      {daysRemaining !== null && (
+                      {daysRemaining !== null && task.status !== '入金待ち' && task.status !== '完了' && (
                         <span className={`text-[10px] font-bold ${daysRemaining < 0 ? 'text-red-600' : daysRemaining <= 3 ? 'text-orange-600' : 'text-blue-600'}`}>
                           あと{daysRemaining}日
                         </span>
@@ -208,14 +218,23 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                     <button onClick={() => onDelete(task.id)} className="p-2 text-gray-400 active:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4 bg-gray-50/30 p-2.5 rounded-lg border border-gray-50">
+                   <div>
+                      <span className="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">金額(税込)</span>
+                      <span className="text-sm font-mono font-bold text-gray-800">{formatPrice(task.price)}</span>
+                   </div>
+                   <div className="text-right">
+                      <span className="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">次期限 ({currentDeadline.label})</span>
+                      <span className="text-xs font-mono font-medium text-gray-700">{formatDate(currentDeadline.date)}</span>
+                   </div>
+                </div>
+
                 <div className="mb-4">
                   <StepProgressBar status={task.status} />
                 </div>
-                <div className="flex items-center justify-between">
-                   <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">次期限 ({currentDeadline.label})</span>
-                      <span className="text-xs font-mono font-medium text-gray-700">{formatDate(currentDeadline.date)}</span>
-                   </div>
+                <div className="flex items-center justify-between text-gray-500">
+                   <span className="text-xs text-gray-400">共有日: {formatDate(task.materialSharedDate)}</span>
                    <div className="flex items-center gap-1 text-xs font-medium text-blue-600">
                       {isExpanded ? '閉じる' : '詳細'}
                       {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}

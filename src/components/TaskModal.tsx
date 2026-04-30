@@ -13,6 +13,7 @@ export function TaskModal({ isOpen, onClose, onSave, initialData }: TaskModalPro
   const [name, setName] = useState('');
   const [materialSharedDate, setMaterialSharedDate] = useState('');
   const [status, setStatus] = useState<TaskStatus>('未着手');
+  const [price, setPrice] = useState<string>('');
   
   // マイルストーンのURLと期限
   const [firstDraftUrl, setFirstDraftUrl] = useState('');
@@ -44,6 +45,7 @@ export function TaskModal({ isOpen, onClose, onSave, initialData }: TaskModalPro
       setName(initialData.name || '');
       setMaterialSharedDate(formatDateForInput(initialData.materialSharedDate));
       setStatus(initialData.status || '未着手');
+      setPrice(initialData.price?.toString() || '');
       
       setFirstDraftUrl(initialData.milestones?.firstDraft?.url || '');
       setFirstDraftDeadline(formatDateForInput(initialData.milestones?.firstDraft?.deadline));
@@ -59,6 +61,7 @@ export function TaskModal({ isOpen, onClose, onSave, initialData }: TaskModalPro
       setName('');
       setMaterialSharedDate('');
       setStatus('未着手');
+      setPrice('');
       setFirstDraftUrl('');
       setFirstDraftDeadline('');
       setSecondDraftUrl('');
@@ -81,6 +84,7 @@ export function TaskModal({ isOpen, onClose, onSave, initialData }: TaskModalPro
       name,
       materialSharedDate,
       status,
+      price: price ? parseInt(price, 10) : undefined,
       milestones: {
         firstDraft: { url: firstDraftUrl, deadline: firstDraftDeadline },
         secondDraft: { url: secondDraftUrl, deadline: secondDraftDeadline },
@@ -99,166 +103,147 @@ export function TaskModal({ isOpen, onClose, onSave, initialData }: TaskModalPro
           <h2 className="text-lg font-medium text-gray-800">
             {initialData ? '案件の編集' : '新規案件の追加'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400">
             <X size={20} />
           </button>
         </div>
-
-        <div className="overflow-y-auto p-6">
-          <form id="task-form" onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* 基本情報 */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900 border-b pb-2">基本情報</h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  案件名 <span className="text-red-500">*</span>
-                </label>
+        
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 p-6 space-y-8">
+          {/* 基本情報 */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">案件名</label>
                 <input
-                  type="text"
                   required
+                  type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="〇〇デザイン制作"
+                  placeholder="例: #123 プロジェクトA"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    素材共有日
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={materialSharedDate}
-                      onChange={(e) => setMaterialSharedDate(e.target.value)}
-                      className="w-full px-3 py-2 pr-8 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                    />
-                    {materialSharedDate && (
-                      <button
-                        type="button"
-                        onClick={() => setMaterialSharedDate('')}
-                        className="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600"
-                        title="日付をクリア"
-                      >
-                        <X size={14} />
-                      </button>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">金額 (税込)</label>
+                <div className="relative group">
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="例: 150000"
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm pr-16"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                    {price && (
+                      <button type="button" onClick={() => setPrice('')} className="p-0.5 hover:bg-gray-200 rounded text-gray-400"><X size={14}/></button>
                     )}
+                    <span className="text-gray-400 text-[10px] font-bold">円</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ステータス */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900 border-b pb-2">ステータス</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white"
-                  >
-                    {TaskStatuses.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">素材共有日</label>
+                <div className="relative group">
+                  <input
+                    type="date"
+                    value={materialSharedDate}
+                    onChange={(e) => setMaterialSharedDate(e.target.value)}
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                  />
+                  {materialSharedDate && (
+                    <button type="button" onClick={() => setMaterialSharedDate('')} className="absolute right-8 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-md text-gray-400"><X size={14} /></button>
+                  )}
                 </div>
               </div>
-            </div>
-
-            {/* スケジュールごとの期限と共有URL */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="text-sm font-semibold text-gray-900">マイルストーン (期限と共有URL)</h3>
-                <span className="text-xs text-gray-500">※必要なフェーズのみ入力（空欄可）</span>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">ステータス</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as TaskStatus)}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                >
+                  {TaskStatuses.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
-              
-              <div className="space-y-3">
-                {[
-                  { label: '初稿', urlValue: firstDraftUrl, urlSetter: setFirstDraftUrl, dateValue: firstDraftDeadline, dateSetter: setFirstDraftDeadline },
-                  { label: '2校', urlValue: secondDraftUrl, urlSetter: setSecondDraftUrl, dateValue: secondDraftDeadline, dateSetter: setSecondDraftDeadline },
-                  { label: '3校', urlValue: thirdDraftUrl, urlSetter: setThirdDraftUrl, dateValue: thirdDraftDeadline, dateSetter: setThirdDraftDeadline },
-                  { label: '4校', urlValue: fourthDraftUrl, urlSetter: setFourthDraftUrl, dateValue: fourthDraftDeadline, dateSetter: setFourthDraftDeadline },
-                  { label: '公開', urlValue: publishUrl, urlSetter: setPublishUrl, dateValue: publishDeadline, dateSetter: setPublishDeadline },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-lg border border-gray-100">
-                    <label className="w-12 text-sm font-medium text-gray-700 shrink-0 text-center">
-                      {item.label}
-                    </label>
-                    <div className="relative w-44 shrink-0">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Calendar size={14} className="text-gray-400" />
+            </div>
+          </div>
+
+          {/* スケジュール詳細 */}
+          <div className="space-y-6 pt-4 border-t border-gray-100">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar size={16} className="text-gray-400" />
+              <h3 className="text-sm font-semibold text-gray-800">スケジュール詳細</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6">
+              {[
+                { label: '初稿', url: firstDraftUrl, setUrl: setFirstDraftUrl, deadline: firstDraftDeadline, setDeadline: setFirstDraftDeadline },
+                { label: '2校', url: secondDraftUrl, setUrl: setSecondDraftUrl, deadline: secondDraftDeadline, setDeadline: setSecondDraftDeadline },
+                { label: '3校', url: thirdDraftUrl, setUrl: setThirdDraftUrl, deadline: thirdDraftDeadline, setDeadline: setThirdDraftDeadline },
+                { label: '4校', url: fourthDraftUrl, setUrl: setFourthDraftUrl, deadline: fourthDraftDeadline, setDeadline: setFourthDraftDeadline },
+                { label: '公開', url: publishUrl, setUrl: setPublishUrl, deadline: publishDeadline, setDeadline: setPublishDeadline },
+              ].map((m) => (
+                <div key={m.label} className="bg-gray-50/50 p-4 rounded-xl space-y-4 border border-gray-50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-500 uppercase">{m.label}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">共有用URL</label>
+                      <div className="relative">
+                        <input
+                          type="url"
+                          value={m.url}
+                          onChange={(e) => m.setUrl(e.target.value)}
+                          placeholder="https://..."
+                          className="w-full pl-9 pr-8 py-2 bg-white border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs"
+                        />
+                        <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        {m.url && (
+                          <button type="button" onClick={() => m.setUrl('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-md text-gray-400"><X size={12} /></button>
+                        )}
                       </div>
-                      <input
-                        type="date"
-                        value={item.dateValue}
-                        onChange={(e) => item.dateSetter(e.target.value)}
-                        className="w-full pl-9 pr-8 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                      />
-                      {item.dateValue && (
-                        <button
-                          type="button"
-                          onClick={() => item.dateSetter('')}
-                          className="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600"
-                          title="日付をクリア"
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
                     </div>
-                    <div className="relative flex-1">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <LinkIcon size={14} className="text-gray-400" />
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">期限日</label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={m.deadline}
+                          onChange={(e) => m.setDeadline(e.target.value)}
+                          className="w-full px-4 py-2 bg-white border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs"
+                        />
+                        {m.deadline && (
+                          <button type="button" onClick={() => m.setDeadline('')} className="absolute right-8 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-md text-gray-400"><X size={12} /></button>
+                        )}
                       </div>
-                      <input
-                        type="url"
-                        value={item.urlValue}
-                        onChange={(e) => item.urlSetter(e.target.value)}
-                        className="w-full pl-9 pr-8 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                        placeholder="共有URL (https://...)"
-                      />
-                      {item.urlValue && (
-                        <button
-                          type="button"
-                          onClick={() => item.urlSetter('')}
-                          className="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600"
-                          title="URLをクリア"
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
+          </div>
+        </form>
 
-          </form>
-        </div>
-
-        <div className="p-4 border-t border-gray-100 flex justify-end gap-3 shrink-0 bg-gray-50/50">
+        <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 shrink-0">
           <button
-            type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
           >
             キャンセル
           </button>
           <button
-            type="submit"
-            form="task-form"
-            className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+            onClick={handleSubmit}
+            className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-all shadow-md active:scale-95"
           >
-            保存
+            保存する
           </button>
         </div>
-
       </div>
     </div>
   );

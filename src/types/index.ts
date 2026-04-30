@@ -30,6 +30,7 @@ export interface Task {
   name: string;
   materialSharedDate: string; // YYYY-MM-DD
   status: TaskStatus;
+  price?: number;
   milestones: {
     firstDraft: Milestone;
     secondDraft: Milestone;
