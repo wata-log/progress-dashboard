@@ -21,9 +21,23 @@ const getStatusBadgeColor = (status: TaskStatus) => {
 const formatDate = (dateStr: string | undefined) => {
   if (!dateStr) return '-';
   try {
-    return format(new Date(dateStr), 'yyyy/MM/dd');
+    // YYYY-MM-DD 形式ならそのまま変換
+    const isoMatch = dateStr.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (isoMatch) {
+      const y = isoMatch[1];
+      const m = isoMatch[2].padStart(2, '0');
+      const d = isoMatch[3].padStart(2, '0');
+      return `${y}/${m}/${d}`;
+    }
+    // それ以外はDateオブジェクト経由
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '-';
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
   } catch {
-    return dateStr;
+    return '-';
   }
 };
 
@@ -36,23 +50,23 @@ const formatPrice = (price: number | undefined) => {
 const getDaysRemaining = (dateStr: string | undefined) => {
   if (!dateStr) return null;
   try {
-    // 文字列から確実に Date を作る (YYYY-MM-DD を想定)
-    const parts = dateStr.split(/[-/]/);
-    if (parts.length < 3) return null;
-    const deadlineDate = startOfDay(new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])));
+    let deadlineDate: Date;
+    const isoMatch = dateStr.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (isoMatch) {
+      deadlineDate = startOfDay(new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3])));
+    } else {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return null;
+      deadlineDate = startOfDay(d);
+    }
 
     // 日本時間の今日を取得
     const now = new Date();
     const today = startOfDay(new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' })));
-    
-    // 差分
+
     const diff = differenceInDays(deadlineDate, today);
-    
-    // 4/30(今日) と 4/30(期限) なら diff=0。 0+1 = あと1日。
-    // 4/30(今日) と 4/29(昨日) なら diff=-1。 -1+1 = 0。 これが期限切れの境界。
-    return diff + 1;
+    return diff + 1; // 当日なら「あと1日」
   } catch (e) {
-    console.error('Date Error:', e);
     return null;
   }
 };
