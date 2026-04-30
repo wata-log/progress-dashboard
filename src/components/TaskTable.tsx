@@ -84,6 +84,11 @@ const getCurrentDeadlineInfo = (task: Task) => {
 export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const handleDeleteClick = (id: string) => setDeleteConfirmId(id);
+  const handleDeleteConfirm = () => { if (deleteConfirmId) { onDelete(deleteConfirmId); setDeleteConfirmId(null); } };
+  const handleDeleteCancel = () => setDeleteConfirmId(null);
 
   const toggleRow = (id: string) => {
     const newExpanded = new Set(expandedRows);
@@ -178,7 +183,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                     <td className="py-4 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
                         <button onClick={() => onEdit(task)} className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all"><Edit2 size={16} /></button>
-                        <button onClick={() => { if (window.confirm('削除しますか？')) onDelete(task.id); }} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"><Trash2 size={16} /></button>
+                        <button onClick={() => handleDeleteClick(task.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
@@ -272,7 +277,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                   </div>
                   <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => onEdit(task)} className="p-2 text-gray-400 active:bg-gray-100 rounded-lg"><Edit2 size={18} /></button>
-                    <button onClick={() => onDelete(task.id)} className="p-2 text-gray-400 active:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                    <button onClick={() => handleDeleteClick(task.id)} className="p-2 text-gray-400 active:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
                   </div>
                 </div>
 
@@ -349,5 +354,41 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
         })}
       </div>
     </div>
+
+    {/* 削除確認ダイアログ */}
+    {deleteConfirmId && (() => {
+      const target = tasks.find(t => t.id === deleteConfirmId);
+      return (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-150">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+                <Trash2 size={22} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">案件を削除しますか？</h3>
+                {target && (
+                  <p className="text-sm text-gray-500 mt-1">「{target.name}」を削除します。この操作は取り消せません。</p>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={handleDeleteCancel}
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm"
+              >
+                削除する
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
   );
 }
