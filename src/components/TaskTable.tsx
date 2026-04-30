@@ -49,32 +49,26 @@ const getDaysRemaining = (dateStr: string | undefined) => {
 const getCurrentDeadlineInfo = (task: Task) => {
   const { status, milestones } = task;
   
-  // 1. 公開準備中・入金待ち・完了の場合は公開期限
   if (status === '公開準備中' || status === '入金待ち' || status === '完了') {
     return { date: milestones?.publish?.deadline, label: '公開' };
   }
 
-  // 2. 4校UP済み、または4校作業中の場合は公開期限
   if (status.includes('4校UP済み') || status.includes('4校作業中')) {
     return { date: milestones?.publish?.deadline, label: '公開' };
   }
 
-  // 3. 3校UP済み、または4校関連は4校期限
   if (status.includes('3校UP済み') || status.includes('4校')) {
     return { date: milestones?.fourthDraft?.deadline, label: '4校' };
   }
 
-  // 4. 2校UP済み、または3校関連は3校期限
   if (status.includes('2校UP済み') || status.includes('3校')) {
     return { date: milestones?.thirdDraft?.deadline, label: '3校' };
   }
 
-  // 5. 初稿UP済み、または2校関連は2校期限
   if (status.includes('初稿UP済み') || status.includes('2校')) {
     return { date: milestones?.secondDraft?.deadline, label: '2校' };
   }
   
-  // 6. それ以外（素材待ち、初稿作業中など）はすべて初稿の期限
   return { date: milestones?.firstDraft?.deadline, label: '初稿' };
 };
 
@@ -147,7 +141,6 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                           <span>{formatDate(currentDeadline.date)}</span>
                           {currentDeadline.date && <span className="text-[10px] text-gray-400 bg-gray-100 px-1 rounded">{currentDeadline.label}</span>}
                         </div>
-                        {/* 入金待ち・完了以外で期限切れアラート表示 */}
                         {daysRemaining !== null && task.status !== '入金待ち' && task.status !== '完了' && (
                           <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium w-fit
                             ${daysRemaining < 0 ? 'bg-red-100 text-red-700' : daysRemaining <= 3 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600'}
@@ -230,7 +223,6 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadgeColor(task.status)}`}>
                         {task.status}
                       </span>
-                      {/* 入金待ち・完了以外で期限表示 */}
                       {daysRemaining !== null && task.status !== '入金待ち' && task.status !== '完了' && (
                         <span className={`text-[10px] font-bold ${daysRemaining < 0 ? 'text-red-600' : daysRemaining <= 3 ? 'text-orange-600' : 'text-blue-600'}`}>
                           あと{daysRemaining}日
@@ -244,7 +236,6 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                   </div>
                 </div>
 
-                {/* 金額と次期限を強調 */}
                 <div className="grid grid-cols-2 gap-4 mb-4 bg-gray-50/30 p-2.5 rounded-lg border border-gray-50">
                    <div>
                       <span className="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">金額(税込)</span>
