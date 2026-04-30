@@ -134,9 +134,9 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                         </div>
                         {daysRemaining !== null && task.status !== '入金待ち' && task.status !== '完了' && (
                           <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium w-fit
-                            ${daysRemaining <= 0 ? 'bg-red-100 text-red-700' : daysRemaining <= 3 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600'}
+                            ${daysRemaining < 0 ? 'bg-red-100 text-red-700' : daysRemaining <= 3 ? 'bg-orange-100 text-orange-700' : 'bg-blue-50 text-blue-600'}
                           `}>
-                            <Clock size={10} /> {daysRemaining <= 0 ? `期限切れ` : `あと${daysRemaining}日`}
+                            <Clock size={10} /> {daysRemaining < 0 ? `期限切れ` : `あと${daysRemaining}日`}
                           </span>
                         )}
                       </div>
@@ -171,6 +171,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                               const isCompleted = stepNum <= completedCount;
                               const isCurrent = stepNum === workingStep;
                               const copyKey = `${task.id}-${ms.id}`;
+                              const label = i === 4 ? '完了' : ms.label;
                               return (
                                 <div key={i} className="flex flex-col items-center relative z-10 w-1/5">
                                   {/* 丸アイコン */}
@@ -179,7 +180,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                                   `}>
                                     {isCompleted ? <Check size={14} strokeWidth={3} /> : <div className={`w-2 h-2 rounded-full ${isCurrent ? 'bg-blue-400' : 'bg-transparent'}`}></div>}
                                   </div>
-                                  <span className="text-xs font-semibold text-gray-700 mb-1">{ms.label}</span>
+                                  <span className="text-xs font-semibold text-gray-700 mb-1">{label}</span>
                                   <span className="text-[11px] text-gray-500 mb-3 font-mono">{formatDate(ms.deadline)}</span>
                                   
                                   {ms.url ? (
@@ -238,8 +239,8 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                         {task.status}
                       </span>
                       {daysRemaining !== null && task.status !== '入金待ち' && task.status !== '完了' && (
-                        <span className={`text-[10px] font-bold ${daysRemaining <= 0 ? 'text-red-600' : daysRemaining <= 3 ? 'text-orange-600' : 'text-blue-600'}`}>
-                          あと{daysRemaining <= 0 ? '0' : daysRemaining}日
+                        <span className={`text-[10px] font-bold ${daysRemaining < 0 ? 'text-red-600' : daysRemaining <= 3 ? 'text-orange-600' : 'text-blue-600'}`}>
+                          あと{daysRemaining < 0 ? '0' : daysRemaining}日
                         </span>
                       )}
                     </div>
@@ -256,7 +257,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                       <span className="text-sm font-mono font-bold text-gray-800">{formatPrice(task.price)}</span>
                    </div>
                    <div className="text-right">
-                      <span className="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">次期限 ({currentDeadline.label})</span>
+                      <span className="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">次期限 ({currentDeadline.label === '公開' ? '完了' : currentDeadline.label})</span>
                       <span className="text-xs font-mono font-medium text-gray-700">{formatDate(currentDeadline.date)}</span>
                    </div>
                 </div>
@@ -283,6 +284,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                         const isCompleted = stepNum <= completedCount;
                         const isCurrent = stepNum === workingStep;
                         const copyKey = `mobile-${task.id}-${ms.id}`;
+                        const label = i === 4 ? '完了' : ms.label;
                         return (
                           <div key={i} className="flex items-start gap-4 relative z-10">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-white shrink-0 ${isCompleted ? 'border-blue-500 bg-blue-500 text-white' : isCurrent ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-300 text-gray-300'}`}>
@@ -290,7 +292,7 @@ export function TaskTable({ tasks, onEdit, onDelete }: TaskTableProps) {
                             </div>
                             <div className="flex-1 min-w-0 pt-0.5">
                               <div className="flex justify-between items-center mb-1">
-                                <span className={`text-sm font-bold ${isCompleted ? 'text-gray-900' : 'text-gray-500'}`}>{ms.label}</span>
+                                <span className={`text-sm font-bold ${isCompleted ? 'text-gray-900' : 'text-gray-500'}`}>{label}</span>
                                 <span className="text-xs font-mono text-gray-400 bg-white px-1 py-0.5 rounded border border-gray-100">{formatDate(ms.deadline)}</span>
                               </div>
                               {ms.url ? (
