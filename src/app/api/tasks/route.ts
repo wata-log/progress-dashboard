@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbzCBhl4B-fKc0PqXL9Y0-xwvW36d2PuZlKTrGRwdbV5uyglVpDjzhQ6-IJqShEzrIp3jA/exec';
+const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbzLL7b6AmUZMPi8DvEEVLI60g5bs1ZxWmfnhqJJpxWaezpAxP8QksMeR0cRhAF8U7doWg/exec';
 
 export async function GET() {
   try {

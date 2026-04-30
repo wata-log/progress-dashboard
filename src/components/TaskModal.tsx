@@ -91,7 +91,7 @@ export function TaskModal({ isOpen, onClose, onSave, initialData }: TaskModalPro
       name,
       materialSharedDate: toDateOnly(materialSharedDate),
       status,
-      price: price ? parseInt(price, 10) : undefined,
+      price: price ? parseInt(price.replace(/[^0-9]/g, ''), 10) : 0,
       milestones: {
         firstDraft: { url: firstDraftUrl, deadline: toDateOnly(firstDraftDeadline) },
         secondDraft: { url: secondDraftUrl, deadline: toDateOnly(secondDraftDeadline) },
