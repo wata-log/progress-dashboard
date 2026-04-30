@@ -21,20 +21,19 @@ const getStatusBadgeColor = (status: TaskStatus) => {
 const formatDate = (dateStr: string | undefined) => {
   if (!dateStr) return '-';
   try {
-    // YYYY-MM-DD 形式ならそのまま変換
+    // YYYY-MM-DD 形式なら正規表現で直接変換（タイムゾーンズレなし）
     const isoMatch = dateStr.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
     if (isoMatch) {
-      const y = isoMatch[1];
-      const m = isoMatch[2].padStart(2, '0');
-      const d = isoMatch[3].padStart(2, '0');
-      return `${y}/${m}/${d}`;
+      return `${isoMatch[1]}/${isoMatch[2].padStart(2,'0')}/${isoMatch[3].padStart(2,'0')}`;
     }
-    // それ以外はDateオブジェクト経由
+    // "Fri Apr 17 2026 ..." などの形式はDateオブジェクト経由
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return '-';
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
+    // UTCではなくJSTで表示するため+9時間
+    const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+    const y = jst.getUTCFullYear();
+    const m = String(jst.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(jst.getUTCDate()).padStart(2, '0');
     return `${y}/${m}/${d}`;
   } catch {
     return '-';
@@ -50,23 +49,23 @@ const formatPrice = (price: number | undefined) => {
 const getDaysRemaining = (dateStr: string | undefined) => {
   if (!dateStr) return null;
   try {
-    let deadlineDate: Date;
+    let y: number, mo: number, d: number;
     const isoMatch = dateStr.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
     if (isoMatch) {
-      deadlineDate = startOfDay(new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3])));
+      y = Number(isoMatch[1]); mo = Number(isoMatch[2]) - 1; d = Number(isoMatch[3]);
     } else {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return null;
-      deadlineDate = startOfDay(d);
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return null;
+      // JSTに変換
+      const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      y = jst.getUTCFullYear(); mo = jst.getUTCMonth(); d = jst.getUTCDate();
     }
-
-    // 日本時間の今日を取得
+    const deadlineDate = startOfDay(new Date(y, mo, d));
     const now = new Date();
     const today = startOfDay(new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' })));
-
     const diff = differenceInDays(deadlineDate, today);
     return diff + 1; // 当日なら「あと1日」
-  } catch (e) {
+  } catch {
     return null;
   }
 };

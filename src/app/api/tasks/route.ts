@@ -20,8 +20,9 @@ export async function POST(request: Request) {
     // GAS側へリクエストを転送
     const response = await fetch(GAS_URL, {
       method: 'POST',
+      redirect: 'follow',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain;charset=utf-8',
       },
       body: JSON.stringify(body),
       cache: 'no-store'
